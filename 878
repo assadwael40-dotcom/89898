@@ -1,0 +1,288 @@
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
+
+export default function HomePage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentPersona, setCurrentPersona] = useState<"coder" | "writer" | "analyst">("coder");
+  const [useGoogleSearch, setUseGoogleSearch] = useState(true);
+  const [useChatGPT, setUseChatGPT] = useState(true);
+
+  const [messages, setMessages] = useState<Array<{ id: string; role: "user" | "ai" | "system"; text: string; sources?: string[] }>>([
+    {
+      id: "welcome",
+      role: "ai",
+      text: "Kusheh! Na NOVA AI dis. A kin sach pan Google ɛn aks ChatGPT fɔ gi yu di best ansa. Wetin yu want mek a fɛn fɔ yu tede?",
+    },
+  ]);
+  const [userInput, setUserInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+
+  const chatMessagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    chatMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
+
+  const handlePersonaChange = (persona: "coder" | "writer" | "analyst") => {
+    setCurrentPersona(persona);
+    const personaNames = { coder: "Koda (Programmer)", writer: "Raita", analyst: "Analyst" };
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now().toString(), role: "system", text: `Yu dɔn chenj di stayl to: ${personaNames[persona]}` },
+    ]);
+  };
+
+  const handleSendMessage = (queryText?: string) => {
+    const textToSend = queryText || userInput;
+    if (!textToSend.trim()) return;
+
+    const userMsgId = Date.now().toString();
+    setMessages((prev) => [...prev, { id: userMsgId, role: "user", text: textToSend }]);
+    if (!queryText) setUserInput("");
+
+    setIsTyping(true);
+
+    setTimeout(() => {
+      setIsTyping(false);
+      const q = textToSend.toLowerCase();
+      let responseText = "";
+      let sources: string[] = [];
+
+      if (useGoogleSearch) sources.push("Google Search Result");
+      if (useChatGPT) sources.push("ChatGPT Engine (OpenAI)");
+
+      if (currentPersona === "coder") {
+        responseText = q.includes("fibonacci") || q.includes("code") || q.includes("كود")
+          ? "Dis na JavaScript code fɔ Fibonacci:\n\nfunction fibonacci(n) {\n  if (n <= 1) return n;\n  let a = 0, b = 1;\n  for (let i = 2; i <= n; i++) {\n    let temp = a + b;\n    a = b;\n    b = temp;\n  }\n  return b;\n}\nconsole.log(fibonacci(10)); // 55"
+          : "A dɔn sach Google ɛn ChatGPT fɔ yu code query. Wetin bak yu want mek a buld fɔ yu?";
+      } else if (currentPersona === "writer") {
+        responseText = q.includes("مقال") || q.includes("article")
+          ? "Dis na short artekul fɔ yu:\n\n**AI Revolution:** Aw AI dey chenj wi wɛl. Na so wi kin yuz NOVA AI, Google ɛn ChatGPT fɔ wok kwik kwik wan..."
+          : "A dɔn fɛn infomeshan pan Google ɛn ChatGPT fɔ rayt am faim wan fɔ yu. Wetin mas a rayt agen?";
+      } else {
+        responseText = q.includes("postgresql") || q.includes("database")
+          ? "Fɔ mek yu PostgreSQL database wok fass:\n1. Yuz Indexes pan di columns.\n2. Yuz EXPLAIN ANALYZE fɔ fɛn di slow stik dɛn.\n3. Adst RAM fɔ work_mem."
+          : "A dɔn anolayz di data kɔlɛkt fɔ yu fro Google ɛn ChatGPT. Wetin ayen yu want a anolayz?";
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        { id: (Date.now() + 1).toString(), role: "ai", text: responseText, sources: sources.length > 0 ? sources : undefined },
+      ]);
+    }, 1200);
+  };
+
+  return (
+    <div dir="rtl" className="min-h-screen bg-[#070a12] text-[#f3f4f6] font-sans selection:bg-[#6366f1] selection:text-white flex flex-col justify-between overflow-x-hidden relative">
+      {/* Background Ambient Glows */}
+      <div className="absolute w-96 h-96 rounded-full bg-[#a855f7] blur-[120px] opacity-25 pointer-events-none top-10 right-10 -z-0"></div>
+      <div className="absolute w-96 h-96 rounded-full bg-[#4f46e5] blur-[120px] opacity-25 pointer-events-none top-1/3 left-10 -z-0"></div>
+      <div className="absolute w-96 h-96 rounded-full bg-[#06b6d4] blur-[120px] opacity-25 pointer-events-none bottom-20 right-1/4 -z-0"></div>
+
+      {/* HEADER / NAVBAR */}
+      <header className="sticky top-0 z-50 bg-[#111827]/70 backdrop-blur-md border-b border-gray-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#a855f7] via-[#6366f1] to-[#06b6d4] flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                <span className="text-white text-xl animate-spin">⚛</span>
+              </div>
+              <span className="text-2xl font-black tracking-wider text-white">
+                NOVA <span className="bg-gradient-to-r from-[#a855f7] via-[#6366f1] to-[#06b6d4] bg-clip-text text-transparent">AI</span>
+              </span>
+            </div>
+
+            <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
+              <a href="#hero" className="hover:text-indigo-400 transition-colors">Home</a>
+              <a href="#demo" className="hover:text-indigo-400 transition-colors">AI Demo</a>
+              <a href="#features" className="hover:text-indigo-400 transition-colors">Features</a>
+              <a href="#pricing" className="hover:text-indigo-400 transition-colors">Pricing</a>
+            </nav>
+
+            <div className="hidden md:flex items-center gap-4">
+              <a href="#demo" className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-semibold hover:opacity-90 transition-all shadow-md shadow-indigo-600/30">
+                Try Free
+              </a>
+            </div>
+
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden text-gray-300 hover:text-white p-2 text-xl">
+              ☰
+            </button>
+          </div>
+        </div>
+
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-[#111827]/90 border-b border-gray-800 px-4 pt-2 pb-6 flex flex-col gap-4">
+            <a href="#hero" onClick={() => setMobileMenuOpen(false)} className="text-gray-300 hover:text-indigo-400 py-2">Home</a>
+            <a href="#demo" onClick={() => setMobileMenuOpen(false)} className="text-gray-300 hover:text-indigo-400 py-2">AI Demo</a>
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-gray-300 hover:text-indigo-400 py-2">Features</a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-gray-300 hover:text-indigo-400 py-2">Pricing</a>
+          </div>
+        )}
+      </header>
+
+      {/* HERO SECTION */}
+      <section id="hero" className="relative pt-12 pb-20 md:pt-20 md:pb-32 overflow-hidden z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#111827]/70 border border-indigo-500/30 text-indigo-400 text-xs sm:text-sm font-medium mb-8 animate-pulse">
+            <span className="flex h-2 w-2 rounded-full bg-cyan-400"></span>
+            NOVA AI v3.5 Turbo 🚀 (Google & ChatGPT Connect)
+          </div>
+
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white leading-tight mb-6">
+            Future of AI <br />
+            <span className="bg-gradient-to-r from-[#a855f7] via-[#6366f1] to-[#06b6d4] bg-clip-text text-transparent">
+              Powered by Google Search & ChatGPT
+            </span>
+          </h1>
+
+          <p className="max-w-2xl mx-auto text-gray-400 text-base sm:text-lg mb-10 leading-relaxed">
+            Fast, accurate AI system that searches Google in real-time and queries ChatGPT to give you the ultimate answers.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+            <a href="#demo" className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 text-white font-bold shadow-xl shadow-indigo-600/30 hover:scale-105 transition-all flex items-center justify-center gap-2">
+              ✨ Test Live Demo
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* AI CHAT DEMO SECTION */}
+      <section id="demo" className="py-12 relative z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Interactive NOVA AI Assistant</h2>
+            <p className="text-gray-400 text-sm">Select options below to search Google and ask ChatGPT automatically</p>
+          </div>
+
+          <div className="p-[1px] rounded-2xl bg-gradient-to-r from-purple-500/30 to-cyan-500/30 shadow-2xl">
+            <div className="bg-[#090d16]/90 rounded-[15px] overflow-hidden flex flex-col h-[560px]">
+              {/* Chat Header */}
+              <div className="bg-[#111827]/80 px-6 py-4 flex flex-wrap items-center justify-between border-b border-gray-800 gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span className="text-xs font-mono text-gray-400 mr-2">nova-hybrid-engine.exe</span>
+                </div>
+
+                {/* Integration Toggles */}
+                <div className="flex items-center gap-3 text-xs">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-gray-300 hover:text-white">
+                    <input
+                      type="checkbox"
+                      checked={useGoogleSearch}
+                      onChange={(e) => setUseGoogleSearch(e.target.checked)}
+                      className="accent-indigo-500 rounded"
+                    />
+                    🔍 Google Search
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-gray-300 hover:text-white">
+                    <input
+                      type="checkbox"
+                      checked={useChatGPT}
+                      onChange={(e) => setUseChatGPT(e.target.checked)}
+                      className="accent-purple-500 rounded"
+                    />
+                    🤖 ChatGPT Sync
+                  </label>
+                </div>
+
+                {/* Persona Switcher */}
+                <div className="flex items-center gap-2 bg-gray-900/80 p-1 rounded-lg border border-gray-800 text-xs">
+                  <button onClick={() => handlePersonaChange("coder")} className={`px-3 py-1.5 rounded-md font-medium transition-all ${currentPersona === "coder" ? "bg-indigo-600 text-white" : "text-gray-400 hover:text-white"}`}>
+                    💻 Coding
+                  </button>
+                  <button onClick={() => handlePersonaChange("writer")} className={`px-3 py-1.5 rounded-md font-medium transition-all ${currentPersona === "writer" ? "bg-indigo-600 text-white" : "text-gray-400 hover:text-white"}`}>
+                    ✍️️ Writing
+                  </button>
+                  <button onClick={() => handlePersonaChange("analyst")} className={`px-3 py-1.5 rounded-md font-medium transition-all ${currentPersona === "analyst" ? "bg-indigo-600 text-white" : "text-gray-400 hover:text-white"}`}>
+                    📊 Analysis
+                  </button>
+                </div>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="flex-1 p-6 overflow-y-auto space-y-4">
+                {messages.map((msg) => {
+                  if (msg.role === "system") {
+                    return (
+                      <div key={msg.id} className="text-center my-2">
+                        <span className="text-xs text-gray-400 bg-gray-900/60 px-3 py-1 rounded-full border border-gray-800">{msg.text}</span>
+                      </div>
+                    );
+                  }
+                  if (msg.role === "user") {
+                    return (
+                      <div key={msg.id} className="flex gap-4 items-start max-w-2xl mr-auto flex-row-reverse">
+                        <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center text-white shrink-0 shadow-md">👤</div>
+                        <div className="bg-indigo-600 p-4 rounded-2xl rounded-tl-none text-sm leading-relaxed text-white">{msg.text}</div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={msg.id} className="flex gap-4 items-start max-w-2xl">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md">🤖</div>
+                      <div className="bg-[#171f33]/60 border border-white/5 p-4 rounded-2xl rounded-tr-none text-sm leading-relaxed text-gray-200 whitespace-pre-wrap">
+                        {msg.text}
+                        {msg.sources && (
+                          <div className="mt-3 pt-2 border-t border-gray-800/80 flex flex-wrap gap-2 text-[10px]">
+                            {msg.sources.map((src, i) => (
+                              <span key={i} className="px-2 py-0.5 rounded bg-indigo-950/80 border border-indigo-500/40 text-indigo-300">
+                                🔗 {src}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {isTyping && (
+                  <div className="flex gap-4 items-start max-w-2xl">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md">🤖</div>
+                    <div className="bg-[#171f33]/60 border border-white/5 p-4 rounded-2xl rounded-tr-none text-sm text-gray-400 flex items-center gap-2">
+                      <span>Analyzing Google Search & ChatGPT...</span>
+                      <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce"></span>
+                      <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce [animation-delay:0.2s]"></span>
+                    </div>
+                  </div>
+                )}
+                <div ref={chatMessagesEndRef} />
+              </div>
+
+              {/* Quick Prompts */}
+              <div className="px-6 py-2 bg-gray-900/40 border-t border-gray-800/50 flex gap-2 overflow-x-auto text-xs">
+                <button onClick={() => handleSendMessage("Search Google for latest Next.js features")} className="shrink-0 px-3 py-1.5 rounded-full bg-[#171f33]/80 border border-gray-700 text-gray-300 hover:border-indigo-500">
+                  🔍 Latest Next.js Updates
+                </button>
+                <button onClick={() => handleSendMessage("Ask ChatGPT to write a Python script")} className="shrink-0 px-3 py-1.5 rounded-full bg-[#171f33]/80 border border-gray-700 text-gray-300 hover:border-indigo-500">
+                  🤖 Python Code from ChatGPT
+                </button>
+              </div>
+
+              {/* Input Form */}
+              <div className="p-4 bg-[#111827]/80 border-t border-gray-800">
+                <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    placeholder="Write a query to search Google or ask ChatGPT..."
+                    className="flex-1 bg-gray-900/80 border border-gray-700/60 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                  />
+                  <button type="submit" className="px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-2 shrink-0">
+                    <span>Send</span> ➔
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
